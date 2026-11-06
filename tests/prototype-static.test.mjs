@@ -53,9 +53,10 @@ test('profile address is a local draft and public sharing stays disabled', () =>
 });
 
 test('all public-link and share controls receive the unavailable state', () => {
-  assert.ok(dashboard.includes("var publicUrl = TapSync.url();\\n    $('[data-href=\\"url\\"]').forEach(function (el) {"));
-  assert.ok(dashboard.includes("var text = encodeURIComponent(state.profile.name + ' - ' + state.profile.title);\\n    $('[data-share]').forEach(function (el) {"));
-  assert.match(dashboard, /el\\.disabled = !publicUrl/);
+  assert.ok(dashboard.includes("var publicUrl = TapSync.url();\n    $$('[data-href=\"url\"]').forEach(function (el) {"));
+  assert.ok(dashboard.includes("var text = encodeURIComponent(state.profile.name + ' - ' + state.profile.title);\n    $$('[data-share]').forEach(function (el) {"));
+  assert.ok(dashboard.includes("$$('[data-action=\"copy-link\"], [data-action=\"download-qr\"], [data-action=\"print-qr\"], [data-action=\"native-share\"], [data-action=\"show-qr\"]').forEach(function (el) {"));
+  assert.match(dashboard, /el\.disabled = !publicUrl/);
 });
 
 test('old placeholder values are migrated and signup creates only a draft slug', () => {
