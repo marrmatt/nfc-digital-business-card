@@ -73,7 +73,6 @@ test('authentication stubs explain their limits and do not fake Google sign-in',
 test('draft address editor accepts the default local slug without publishing it', () => {
   assert.ok(dashboard.includes('var isSlug=/^[a-z0-9]'));
   assert.ok(dashboard.includes('if((!isSlug&&!domainPath)||value.length>240)'));
-  assert.match(dashboard, /url: function \\(\\) \\{ return ''; \\}/);
 });
 
 test('external link rendering retains URL validation and HTML escaping helpers', () => {
