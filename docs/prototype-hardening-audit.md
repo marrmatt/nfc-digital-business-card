@@ -74,3 +74,38 @@
 ## Day 1 conclusion
 
 The repository is an interactive front-end prototype, not a production-ready service. Source-level JavaScript syntax is parseable, but there is no automated test/build pipeline and no browser runtime verification yet. The most important product-readiness blockers are the placeholder public URL, simulated authentication, and confirmation that hard-coded demo identity data is safe to publish.
+
+
+## Day 2 — Changes and verification (2026-11-06)
+
+**Working branch:** `prototype-hardening/day-1-audit-2026-11-05`  
+**Main baseline:** `8a4495712e2430f52487edb6a412b8f99a65368d` (left unchanged)
+
+### Code and test commits
+
+- `45332020d88c9a2205c77c69c7f9b7276cb0f972` — made the unpublished profile state explicit; disabled fake public-link/QR/share actions; clarified demo authentication stubs; updated README; added source-level regression tests.
+- `6f146a4ef47515690667a590c4f8311736eca068` — allowed the default local draft slug in the address editor while still keeping publishing unavailable.
+- `46446fedc23bda514f7f7c7432f04e883e880e28` — simplified the new regression test assertion.
+
+### Files changed
+
+- `TapSync — App Prototype (1).html` — replaced the fake `yourbrand.et` destination with a local draft slug; migrated previously saved placeholder values; made `TapSync.url()` return no public URL until a real public route exists; removed static share destinations; disabled public-link copy/share and QR download/print/modal actions; added an accessible QR unavailable state; made Google sign-in/password reset display explicit not-connected messages; changed auth labels to demo mode; removed the fake “Profile Live”/“Ready to Scan” status and sample tap count presentation; made the draft address editor accept a simple slug or valid domain/path.
+- `README.md` — added local run instructions, demo limits, privacy/storage caveats, test command, and manual smoke-test checklist.
+- `tests/prototype-static.test.mjs` — added Node built-in tests for embedded-document/inline-script parsing and source-level guardrails.
+- `docs/prototype-hardening-audit.md` — this evidence log.
+
+### Verification evidence
+
+- Re-fetched the committed HTML blob from GitHub: **3,060,091 characters**, blob SHA `f5995653e0cdb5e0be8d067071ad0ecc59d1db30`.
+- Parsed all **7 embedded inline JavaScript blocks** from the actual GitHub source in the available JavaScript runtime; no syntax errors were reported.
+- Ran **10 in-memory static assertions** against the fetched source; all passed: no literal placeholder domain remains, no hard-coded share destinations remain, the public URL function returns empty, share/QR actions are guarded, auth stubs are disclosed, the Google handler does not post a fake auth message, draft-slug validation is present, strict HTTP(S) URL validation remains, and dynamic link rendering retains escaping.
+- Node.js is present in the container (`v22.16.0`), but `node --test tests/prototype-static.test.mjs` was **not run** against a local checkout: the repository could not be downloaded into the container because network/DNS access was unavailable. The committed test suite therefore still needs a real `node --test` run.
+- **Not run:** browser/runtime testing, Android viewport testing, QR decode test, actual clipboard/native share/download/print checks, accessibility audit, network/console inspection, build/lint, and end-to-end core journeys. No package/build/lint configuration exists in the inspected repository.
+
+### Remaining risks and exit status
+
+- The app still has no public profile route or online publishing, authentication provider, NFC writing, Google Contacts sync, billing, backend/database, or cross-device sync. The UI now states these limitations instead of pretending public links work.
+- Profile/contact state remains browser-local. Clearing site data or storage failure can lose edits; JSON export exists, but restore/import is still absent.
+- Realistic-looking sample identity/contact data remains in the public source and should be reviewed before wider promotion. Google Fonts and Cloudflare Web Analytics still make third-party requests; privacy/network behavior has not been tested.
+- The roughly 3 MB single-file structure and duplicate helper/state declarations remain; no broad rewrite was attempted.
+- **Day 2 status: partial.** The source-level fixes and regression tests are committed, but the Day 2 exit gate remains **not verified** until the test suite runs in a local Node environment and real browser/mobile journeys are exercised. No merge, deployment, or backend/database work was performed.
