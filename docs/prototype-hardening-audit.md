@@ -96,9 +96,9 @@ The repository is an interactive front-end prototype, not a production-ready ser
 
 ### Verification evidence
 
-- Re-fetched the committed HTML blob from GitHub: **3,060,091 characters**, blob SHA `f5995653e0cdb5e0be8d067071ad0ecc59d1db30`.
+- Re-fetched the final committed HTML blob from GitHub: **3,060,094 characters**, blob SHA `9bbc022965bea06a15c6a6c1f380cbcb723ef31e`. Regression-test blob SHA: `3784f797cf856ac21107dd2475703c2298c6ef1e`.
 - Parsed all **7 embedded inline JavaScript blocks** from the actual GitHub source in the available JavaScript runtime; no syntax errors were reported.
-- Ran **10 in-memory static assertions** against the fetched source; all passed: no literal placeholder domain remains, no hard-coded share destinations remain, the public URL function returns empty, share/QR actions are guarded, auth stubs are disclosed, the Google handler does not post a fake auth message, draft-slug validation is present, strict HTTP(S) URL validation remains, and dynamic link rendering retains escaping.
+- Ran **14 in-memory static assertions** against the final fetched source; all passed: no literal placeholder domain remains, no hard-coded share destinations remain, the public URL function returns empty, every URL/share/action selector uses query-all so all matching controls receive the unavailable state, QR actions are guarded, auth stubs are disclosed, the Google handler does not post a fake auth message, draft-slug validation and legacy-value migration are present, strict HTTP(S) URL validation remains, and dynamic link rendering retains escaping.
 - Node.js is present in the container (`v22.16.0`), but `node --test tests/prototype-static.test.mjs` was **not run** against a local checkout: the repository could not be downloaded into the container because network/DNS access was unavailable. The committed test suite therefore still needs a real `node --test` run.
 - **Not run:** browser/runtime testing, Android viewport testing, QR decode test, actual clipboard/native share/download/print checks, accessibility audit, network/console inspection, build/lint, and end-to-end core journeys. No package/build/lint configuration exists in the inspected repository.
 
@@ -109,3 +109,11 @@ The repository is an interactive front-end prototype, not a production-ready ser
 - Realistic-looking sample identity/contact data remains in the public source and should be reviewed before wider promotion. Google Fonts and Cloudflare Web Analytics still make third-party requests; privacy/network behavior has not been tested.
 - The roughly 3 MB single-file structure and duplicate helper/state declarations remain; no broad rewrite was attempted.
 - **Day 2 status: partial.** The source-level fixes and regression tests are committed, but the Day 2 exit gate remains **not verified** until the test suite runs in a local Node environment and real browser/mobile journeys are exercised. No merge, deployment, or backend/database work was performed.
+
+
+### Follow-up correction — apply the unavailable state to every matching control
+
+- `f2b74d6c18c6b295a66ed0548feab82197a731e0` — intermediate test-only selector assertion update; the following commit corrected the selector coverage.
+- `7b2979aa2bfec63c1aab91f2ff03a826e7fd8b1c` — changed the public URL, share-channel, and public-action loops to query all matching elements, and added regression assertions for that behavior.
+- Re-fetched the final branch source and confirmed the guard loops now use query-all selectors for all URL anchors, all share links, and all public action buttons. All 7 inline JavaScript blocks still parse in the available source-analysis runtime, and all 14 source-level assertions pass.
+- The test runner and browser limitations above still apply; this follow-up does not change the Day 2 exit status.
