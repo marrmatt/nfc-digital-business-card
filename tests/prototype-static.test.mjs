@@ -87,3 +87,13 @@ test('external link rendering retains URL validation and HTML escaping helpers',
   assert.ok(dashboard.includes('function esc(v)'));
   assert.ok(dashboard.includes("esc(safeUrl(l.url))"));
 });
+
+test('disabled share anchors have valid accessible markup', () => {
+  const shareAnchors = [...dashboard.matchAll(/<a\\b[^>]*data-share="[^"]+"[^>]*>/g)].map((match) => match[0]);
+  assert.equal(shareAnchors.length, 4, 'expected the four supported share-channel controls');
+  for (const anchor of shareAnchors) {
+    assert.match(anchor, /\\baria-disabled="true"/);
+    assert.match(anchor, /\\btabindex="-1"/);
+    assert.doesNotMatch(anchor, /\\btabindex="-1\\s+rel=/);
+  }
+});
