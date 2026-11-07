@@ -117,3 +117,56 @@ The repository is an interactive front-end prototype, not a production-ready ser
 - `7b2979aa2bfec63c1aab91f2ff03a826e7fd8b1c` — changed the public URL, share-channel, and public-action loops to query all matching elements, and added regression assertions for that behavior.
 - Re-fetched the final branch source and confirmed the guard loops now use query-all selectors for all URL anchors, all share links, and all public action buttons. All 7 inline JavaScript blocks still parse in the available source-analysis runtime, and all 14 source-level assertions pass.
 - The test runner and browser limitations above still apply; this follow-up does not change the Day 2 exit status.
+
+## Day 3 — Regression, quality gates, and handoff (2026-11-07)
+
+**Working branch:** `prototype-hardening/day-1-audit-2026-11-05`  
+**Main baseline:** `8a4495712e2430f52487edb6a412b8f99a65368d` — `main` was not modified.  
+**Decision:** **NO-GO for backend/database integration at this time.** The source-level fixes are regression-tested, but browser/mobile journeys and the remaining user-facing acceptance criteria are not verified.
+
+### Changes made on the working branch
+
+- `.github/workflows/prototype-static-tests.yml` — added a read-only GitHub Actions job to run `node --test tests/prototype-static.test.mjs` on pushes to `main` and `prototype-hardening/*`, and on pull requests targeting `main`. Updated the actions to `actions/checkout@v7.0.1` and `actions/setup-node@v7.1.0`; Node.js 22 is used. The workflow requests only `contents: read`.
+- `TapSync — App Prototype (1).html` — corrected four malformed disabled share-channel anchor attributes. They now use a valid `tabindex="-1"` alongside `aria-disabled="true"`; no public sharing or QR functionality was re-enabled. Final HTML blob SHA: `d23fb1f5e75bc0e364e78994bd358ded586960fe`.
+- `tests/prototype-static.test.mjs` — added a regression test to catch malformed markup on all four disabled share-channel anchors. Final test blob SHA: `f072b627095ce2129206d2ba4e2ca499e977b4ff`.
+- `README.md` — documented the automated workflow and retained the local run instructions, demo boundaries, storage caveats, and manual smoke-test list. README blob SHA: `3c9f21d9bb06dfd072c8f971e94ca8d472dd09c8`.
+
+### Verification evidence
+
+- **Final CI run:** [GitHub Actions run #7](https://github.com/marrmatt/nfc-digital-business-card/actions/runs/42366585150), commit `08bf571cdfed207feca7d121d211d5a767f4d9ea`, completed successfully on 2026-11-07. The exact command `node --test tests/prototype-static.test.mjs` reported **9 tests, 9 passed, 0 failed** (Node.js 22 on Ubuntu 24.04). The nine passing tests cover embedded-document/inline-script parsing, removal of the fake public domain, unavailable public URL/share/QR states, all-controls guarding, legacy-value migration, explicit authentication-stub messaging, draft-slug validation, HTTP(S) URL validation/HTML escaping, and the corrected share-anchor markup.
+- The workflow's initial runs #2–#4 failed during the first attempt to correct the share markup: one intermediate HTML update did not preserve escaping for the embedded `</script>` sequences, and an intermediate regression-test expression was over-escaped. Those intermediate versions were corrected; run #5, run #6, and the final run #7 passed. The failed runs remain visible in GitHub Actions history and are not represented as successful checks.
+- Source inspection of the fetched final HTML confirmed all seven embedded inline JavaScript blocks parse, the profile URL remains unavailable until publishing exists, Google sign-in/password-reset are clearly marked as stubs, the URL validator accepts only HTTP(S) URLs with a hostname and no embedded credentials, dynamic link output uses HTML escaping, the parent message handler checks the sending iframe, static links opened in a new tab include `noopener`/`noreferrer`, responsive breakpoints exist, and reduced-motion rules are present. These are source-level observations, not proof of runtime behavior.
+- No package/build/lint/type-check configuration or production build command exists in the inspected repository. The available Node test suite now runs in CI. No browser automation runtime was available in this session, so the app was **not** opened and exercised in a browser.
+
+### Regression status and unresolved risks
+
+| Area | Result | Evidence / limitation |
+|---|---|---|
+| Embedded JavaScript syntax and static regression tests | **PASS** | Final CI run #7; 9/9 tests |
+| Disabled public-link/share/QR behavior | **PASS at source/test level** | Source assertions and regression suite; no browser click test |
+| Responsive layout | **PARTIAL / unverified** | CSS breakpoints and reduced-motion rules exist; no actual viewport measurements |
+| Core journeys, forms, navigation, storage refresh, contact export, QR, share/copy/print | **NOT TESTED in browser** | No browser runtime; do not infer success from source inspection |
+| Keyboard, focus, labels, contrast, screen-reader behavior | **NOT FULLY VERIFIED** | Only limited markup/source review; no accessibility audit |
+| Console, network, asset loading, broken external links | **NOT TESTED** | No browser/network inspection; Google Fonts and Cloudflare Web Analytics remain third-party requests |
+| Build/lint/type-check | **NOT AVAILABLE** | No corresponding manifest or configuration found |
+| Frontend security/privacy | **SOURCE REVIEW ONLY** | Escaping and URL guards were inspected; this was not a comprehensive dynamic-input/runtime security test |
+| README/setup and final diff | **REVIEWED** | README reflects the static prototype; changes remain on the dedicated branch |
+
+Remaining known risks: profile state and exchanged contacts are browser-local; storage exceptions can be swallowed without clear user feedback; JSON export has no import/restore path; realistic-looking sample identity/contact data remains in the public source and should be confirmed or replaced before promotion; third-party font/analytics requests have not been network/privacy-tested; the roughly 3 MB single-file design and duplicate helper declarations remain. There is still no public profile route, real authentication, NFC writing, billing, Google Contacts sync, backend/database, or cross-device sync. These are not claimed as implemented.
+
+### Backend-readiness handoff
+
+**Recommendation: do not begin backend/database implementation yet.** First run the manual smoke checklist in a real browser, including Android-sized viewports, and verify the main demo journeys. Review/replace sample identity data before wider sharing. Do not merge or deploy without explicit approval.
+
+Suggested future entities and boundaries (planning only; no backend code was added):
+
+- **Account/session:** account ID, verified email, authentication/session state, recovery flow.
+- **Profile:** owner ID, display name, title, bio, contact channels, draft slug, public slug/publication status, photo reference, language, theme/accent/layout, visibility.
+- **Links and services:** stable IDs, type/label, validated URL, enabled state/order; service title/description/image reference/order.
+- **Contact exchange:** submitted contact fields, consent/notice, received timestamp, owner scope, retention/deletion policy, export format.
+- **Media and preferences:** image type/size limits, ownership, storage reference, appearance and language settings.
+- **API boundaries:** authenticated profile/link/service CRUD; safe media upload; publish/unpublish and public profile route; contact exchange; export; QR generation only from a real published URL. Enforce validation and authorization server-side, avoid secrets in client code, and decide rate limits, retention, privacy notice/consent, slug conflicts, and third-party analytics policy before implementation.
+
+### Day 3 exit-gate conclusion
+
+The static regression gate is now repeatable and green. The full prototype exit gate remains **incomplete** because actual browser/mobile journeys, accessibility, and console/network checks are still unverified. This report is a source-based handoff, not a production-readiness certification. No merge, deployment, or backend/database integration was performed.
