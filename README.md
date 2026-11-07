@@ -37,6 +37,8 @@ node --test tests/prototype-static.test.mjs
 
 These checks parse the embedded HTML/inline JavaScript and assert key preview-only safety guards. They do **not** execute the UI or replace real browser, mobile, accessibility, or network testing.
 
+GitHub Actions runs this test command on pushes to `main` and `prototype-hardening/*` branches and on pull requests targeting `main`.
+
 ## Manual smoke-test checklist
 
 - [ ] Open the landing page and enter demo mode using sample credentials only.
